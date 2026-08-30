@@ -585,7 +585,7 @@ export const BriefReader: React.FC<BriefReaderProps> = ({
           </section>
         )}
 
-        {/* SECTION 5: Próxima Entrega & Producción */}
+        {/* SECTION 5: Próxima Entrega */}
         <section className="pt-6 border-t border-slate-200 space-y-6">
           
           {/* Teaser Box */}
@@ -608,23 +608,6 @@ export const BriefReader: React.FC<BriefReaderProps> = ({
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Agendar Recordatorio</span>
               </button>
-            </div>
-          </div>
-
-          {/* Production Notes */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
-            <span className="font-bold text-[#09193a] uppercase tracking-wider text-[10px]">
-              Notas de Validación Técnica (CapacitaRSE)
-            </span>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[#696484]">
-              <div>
-                <strong className="text-[#09193a]">Enfoque: </strong>
-                {brief.productionNotes.institutionalFocus}
-              </div>
-              <div>
-                <strong className="text-[#09193a]">Accionabilidad: </strong>
-                {brief.productionNotes.practicalValue}
-              </div>
             </div>
           </div>
 
