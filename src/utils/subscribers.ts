@@ -120,7 +120,7 @@ function sendWeeklyFridayBriefEmails() {
   if (data.length <= 1) return;
   
   var subject = "[FridAI Brief] Nueva edición disponible | CapacitaRSE";
-  var portalUrl = "https://cursosderse.com/";
+  var portalUrl = "https://capacitarse.github.io/fridaibrief/";
   
   // Recorre los contactos y envía el recordatorio
   for (var i = 1; i < data.length; i++) {

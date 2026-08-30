@@ -11,9 +11,9 @@ export interface CalendarEventParams {
 
 const DEFAULT_EVENT: CalendarEventParams = {
   title: 'FridAI Brief by CapacitaRSE (Nueva Edición)',
-  description: 'Nueva edición semanal de FridAI Brief disponible. Análisis técnico, matrices ESG, prompts corporativos y herramientas de sostenibilidad aplicadas con IA.\\n\\nAccede en: https://cursosderse.com\\nCapacitaRSE - Publicación: Viernes AM.',
+  description: 'Nueva edición semanal de FridAI Brief disponible. Análisis técnico, matrices ESG, prompts corporativos y herramientas de sostenibilidad aplicadas con IA. \nAccede en: https://capacitarse.github.io/fridaibrief/',
   location: 'Online / FridAI Brief (CapacitaRSE)',
-  url: typeof window !== 'undefined' ? window.location.origin : 'https://cursosderse.com'
+  url: 'https://capacitarse.github.io/fridaibrief/'
 };
 
 /**
@@ -29,7 +29,7 @@ export function getGoogleCalendarUrl(params: CalendarEventParams = DEFAULT_EVENT
   const searchParams = new URLSearchParams({
     action: 'TEMPLATE',
     text: params.title,
-    details: `${params.description}\n\nEnlace: ${params.url}`,
+    details: params.description,
     location: params.location || 'Online',
     dates: `${startIso}/${endIso}`,
     recur: `RRULE:FREQ=WEEKLY;BYDAY=FR;UNTIL=${untilIso}`
@@ -49,7 +49,7 @@ export function getOutlookWebUrl(params: CalendarEventParams = DEFAULT_EVENT): s
     path: '/calendar/action/compose',
     rru: 'addevent',
     subject: params.title,
-    body: `${params.description}\n\nEnlace: ${params.url}`,
+    body: params.description,
     location: params.location || 'Online',
     startdt: startIso,
     enddt: endIso
@@ -92,7 +92,7 @@ export function downloadIcsCalendar(params: CalendarEventParams = DEFAULT_EVENT)
     `SUMMARY:${params.title}`,
     `DESCRIPTION:${params.description.replace(/\n/g, '\\n')}`,
     `LOCATION:${params.location || 'Online'}`,
-    `URL:${params.url || 'https://cursosderse.com'}`,
+    `URL:${params.url || 'https://capacitarse.github.io/fridaibrief/'}`,
     'STATUS:CONFIRMED',
     'BEGIN:VALARM',
     'TRIGGER:-PT15M',
