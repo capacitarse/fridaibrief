@@ -19,19 +19,50 @@ import { Footer } from './components/Footer';
 import { isBriefReleased, getNextReleaseCountdown } from './utils/time';
 
 export default function App() {
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [activeBrief, setActiveBrief] = useState<BriefEdition | null>(null);
   const [isSubscribeOpen, setIsSubscribeOpen] = useState<boolean>(false);
   const [subscribeInitialEmail, setSubscribeInitialEmail] = useState<string>('');
   const [isSubscribersOpen, setIsSubscribersOpen] = useState<boolean>(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [isEmailPreviewOpen, setIsEmailPreviewOpen] = useState<boolean>(false);
-  const [unlockAll, setUnlockAll] = useState<boolean>(false); // Starts in scheduled/reminder mode to optimize lead capture for launch
+  const [unlockAll, setUnlockAll] = useState<boolean>(false);
   const [simulatedDate, setSimulatedDate] = useState<string | null>(null);
   const [currentBaTime, setCurrentBaTime] = useState<string>('');
 
   const openSubscribeWithEmail = (email: string = '') => {
     setSubscribeInitialEmail(email);
     setIsSubscribeOpen(true);
+  };
+
+  // Check admin mode from URL (?admin=true or ?preview=true) or sessionStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const adminParam = params.get('admin') || params.get('preview');
+    const storedAdmin = typeof window !== 'undefined' ? sessionStorage.getItem('fridai_admin_mode') : null;
+    
+    if (adminParam === 'true' || adminParam === 'capacitarse' || storedAdmin === 'true') {
+      setIsAdmin(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('fridai_admin_mode', 'true');
+      }
+    }
+  }, []);
+
+  const toggleAdminMode = () => {
+    setIsAdmin(prev => {
+      const nextVal = !prev;
+      if (typeof window !== 'undefined') {
+        if (nextVal) {
+          sessionStorage.setItem('fridai_admin_mode', 'true');
+        } else {
+          sessionStorage.removeItem('fridai_admin_mode');
+          setUnlockAll(false);
+          setSimulatedDate(null);
+        }
+      }
+      return nextVal;
+    });
   };
 
   // Live timer for Buenos Aires clock & countdown
@@ -107,15 +138,18 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#09193a]">
       
-      {/* Time Simulation & Buenos Aires Status Top Bar */}
-      <TimeTravelBar
-        unlockAll={unlockAll}
-        onToggleUnlockAll={() => setUnlockAll(!unlockAll)}
-        simulatedDate={simulatedDate}
-        onSelectSimulatedDate={(iso) => setSimulatedDate(iso)}
-        currentBaTime={currentBaTime}
-        onOpenSubscribers={() => setIsSubscribersOpen(true)}
-      />
+      {/* Time Simulation & Buenos Aires Status Top Bar - Only visible in Admin Mode */}
+      {isAdmin && (
+        <TimeTravelBar
+          unlockAll={unlockAll}
+          onToggleUnlockAll={() => setUnlockAll(!unlockAll)}
+          simulatedDate={simulatedDate}
+          onSelectSimulatedDate={(iso) => setSimulatedDate(iso)}
+          currentBaTime={currentBaTime}
+          onOpenSubscribers={() => setIsSubscribersOpen(true)}
+          onCloseAdminMode={toggleAdminMode}
+        />
+      )}
 
       {/* Main Navigation Header */}
       <Navbar
@@ -128,6 +162,7 @@ export default function App() {
         onToggleUnlockAll={() => setUnlockAll(!unlockAll)}
         releasedCount={releasedCount}
         totalCount={BRIEFS_DATA.length}
+        isAdmin={isAdmin}
       />
 
       {/* Main Content: Reader View or Home Grid */}
@@ -168,7 +203,9 @@ export default function App() {
       <Footer
         onOpenSubscribe={() => openSubscribeWithEmail()}
         onOpenCalendar={() => setIsCalendarOpen(true)}
-        onOpenSubscribers={() => setIsSubscribersOpen(true)}
+        onOpenSubscribers={isAdmin ? () => setIsSubscribersOpen(true) : undefined}
+        isAdmin={isAdmin}
+        onToggleAdmin={toggleAdminMode}
       />
 
       {/* Modals */}
