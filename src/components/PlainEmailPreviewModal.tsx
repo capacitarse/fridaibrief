@@ -16,7 +16,7 @@ export const PlainEmailPreviewModal: React.FC<PlainEmailPreviewModalProps> = ({
 
   if (!isOpen) return null;
 
-  const plainTextEmailContent = `De: CapacitaRSE Lastam <capacitarse@cursosderse.com>
+  const plainTextEmailContent = `De: CapacitaRSE Latam <capacitarse@cursosderse.com>
 Para: suscriptor@empresa.com
 Fecha: Viernes 4 de Septiembre de 2026, Viernes AM
 Asunto: [FridAI Brief #01] Desarmando el reporte de Plaza Logística: Datos duros en Real Estate Sostenible
