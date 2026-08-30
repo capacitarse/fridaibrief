@@ -1,0 +1,6 @@
+{
+  "name": "FridAI Brief by CapacitaRSE",
+  "description": "Ediciones semanales de análisis técnico, prompts avanzados y herramientas de IA aplicada a la sostenibilidad corporativa y ESG por CapacitaRSE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
