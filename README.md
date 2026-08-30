@@ -134,4 +134,4 @@ git push -u origin main
 ## 📄 Licencia y Créditos
 
 Desarrollado para **CapacitaRSE** — Formación y consultoría líder en Sostenibilidad, RSE y ESG en Iberoamérica.  
-Sitio web oficial: [capacitarse.org](https://capacitarse.org) | [cursosderse.com](https://www.cursosderse.com)
+Sitio web oficial:[cursosderse.com](https://www.cursosderse.com)
