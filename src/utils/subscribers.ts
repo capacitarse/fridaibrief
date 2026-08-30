@@ -2,7 +2,7 @@ import { SubscriberRecord } from '../types';
 
 const STORAGE_KEY = 'fridai_subscribers_list';
 const WEBHOOK_STORAGE_KEY = 'fridai_google_sheet_webhook';
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH4vtMHCYZf6ZLL1uxMF3D71JlSWtN7wHvx3SM7rA0GFFxniTSoZTfcmeumumZxh-u5g/exec'; 
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH4vtMHCYZf6ZLL1uxMF3D71JlSWtN7wHvx3SM7rA0GFFxniTSoZTfcmeumumZxh-u5g/exec';
 
 export function getSubscribers(): SubscriberRecord[] {
   if (typeof window === 'undefined') return [];
@@ -24,14 +24,13 @@ export function saveSubscriber(record: Omit<SubscriberRecord, 'id' | 'timestamp'
   const existingList = getSubscribers();
   const normalizedEmail = record.email.trim().toLowerCase();
 
-  // Check if already subscribed
   const existingIndex = existingList.findIndex(item => item.email.toLowerCase() === normalizedEmail);
   
   const newRecord: SubscriberRecord = {
-    id: existingIndex >= 0 ? existingList[existingIndex].id : `sub_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    id: existingIndex >= 0 ? existingList[existingIndex].id : `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     email: normalizedEmail,
-    name: record.name?.trim() || undefined,
-    organization: record.organization?.trim() || undefined,
+    name: record.name ? record.name.trim() : undefined,
+    organization: record.organization ? record.organization.trim() : undefined,
     preferredChannel: record.preferredChannel || 'email',
     editionTarget: record.editionTarget || 'ALL_LAUNCH',
     timestamp: new Date().toISOString()
@@ -41,12 +40,10 @@ export function saveSubscriber(record: Omit<SubscriberRecord, 'id' | 'timestamp'
   let isDuplicate = false;
 
   if (existingIndex >= 0) {
-    // Update existing
     updatedList = [...existingList];
     updatedList[existingIndex] = newRecord;
     isDuplicate = true;
   } else {
-    // Append new
     updatedList = [newRecord, ...existingList];
   }
 
@@ -56,7 +53,7 @@ export function saveSubscriber(record: Omit<SubscriberRecord, 'id' | 'timestamp'
     console.error('Failed to save subscriber locally', e);
   }
 
-  // Auto-send to your Google Sheets Apps Script Webhook
+  // Enviar a Google Sheets
   const webhookUrl = getAppsScriptWebhookUrl();
   if (webhookUrl && webhookUrl.startsWith('http')) {
     try {
@@ -65,29 +62,21 @@ export function saveSubscriber(record: Omit<SubscriberRecord, 'id' | 'timestamp'
         email: newRecord.email,
         name: newRecord.name || '',
         organization: newRecord.organization || '',
-        preferredChannel: newRecord.preferredChannel || 'email',
-        editionTarget: newRecord.editionTarget || 'ALL_LAUNCH'
+        preferredChannel: newRecord.preferredChannel || 'email'
       };
 
       fetch(webhookUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          'Content-Type': 'text/plain;charset=utf-8'
         },
         body: JSON.stringify(payload)
-      }).catch(() => {
-        const qs = new URLSearchParams({
-          timestamp: newRecord.timestamp,
-          email: newRecord.email,
-          name: newRecord.name || '',
-          organization: newRecord.organization || '',
-          preferredChannel: newRecord.preferredChannel || 'email'
-        }).toString();
-        fetch(`${webhookUrl}?${qs}`, { mode: 'no-cors' });
+      }).catch(err => {
+        console.warn('Webhook error:', err);
       });
     } catch (err) {
-      console.warn('Google Sheets Webhook dispatch note:', err);
+      console.warn('Google Sheets Webhook note:', err);
     }
   }
 
@@ -115,7 +104,7 @@ export function exportSubscribersToCSV(): void {
     return;
   }
 
-  const headers = ['ID', 'Email', 'Nombre', 'Organización', 'Canal Preferido', 'Objetivo Edición', 'Fecha y Hora Registro'];
+  const headers = ['ID', 'Email', 'Nombre', 'Organizacion', 'Canal', 'Objetivo', 'Fecha'];
   const rows = subscribers.map(s => [
     s.id,
     `"${s.email}"`,
@@ -134,4 +123,13 @@ export function exportSubscribersToCSV(): void {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+export function getSampleAppsScriptCode(): string {
+  return `function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  sheet.appendRow([data.timestamp, data.email, data.name, data.organization, data.preferredChannel]);
+  return ContentService.createTextOutput(JSON.stringify({ result: "success" })).setMimeType(ContentService.MimeType.JSON);
+}`;
 }
