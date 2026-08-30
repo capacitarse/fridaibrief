@@ -11,6 +11,7 @@ interface NavbarProps {
   onToggleUnlockAll: () => void;
   releasedCount: number;
   totalCount: number;
+  isAdmin?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,7 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   unlockAll,
   onToggleUnlockAll,
   releasedCount,
-  totalCount
+  totalCount,
+  isAdmin = false
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#9ba1a5]/20 shadow-xs">
@@ -77,29 +79,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* Toggle Preview Mode (Allows reviewing all briefs or adhering to release date) */}
-            <button
-              onClick={onToggleUnlockAll}
-              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
-                unlockAll 
-                  ? 'bg-[#60afc1]/20 text-[#09193a] border-[#60afc1]' 
-                  : 'bg-slate-100 hover:bg-slate-200 text-[#696484] border-slate-200'
-              }`}
-              title={unlockAll ? "Desactivar modo lectura libre" : "Activar modo lectura libre para revisar todas las ediciones"}
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>{unlockAll ? "Modo Revisión Activo" : "Simulador"}</span>
-            </button>
+            {/* Admin-only controls */}
+            {isAdmin && (
+              <>
+                {/* Toggle Preview Mode */}
+                <button
+                  onClick={onToggleUnlockAll}
+                  className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
+                    unlockAll 
+                      ? 'bg-[#60afc1]/20 text-[#09193a] border-[#60afc1]' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-[#696484] border-slate-200'
+                  }`}
+                  title={unlockAll ? "Desactivar modo lectura libre" : "Activar modo lectura libre para revisar todas las ediciones"}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>{unlockAll ? "Modo Revisión Activo" : "Simulador"}</span>
+                </button>
 
-            {/* Email Preview Notice */}
-            <button
-              onClick={onOpenEmailPreview}
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#696484] hover:text-[#09193a] bg-slate-50 hover:bg-slate-100 rounded-lg border border-[#9ba1a5]/20 transition-colors"
-              title="Ver formato del aviso por e-mail"
-            >
-              <Mail className="w-3.5 h-3.5 text-[#60afc1]" />
-              <span>Aviso E-mail</span>
-            </button>
+                {/* Email Preview Notice */}
+                <button
+                  onClick={onOpenEmailPreview}
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#696484] hover:text-[#09193a] bg-slate-50 hover:bg-slate-100 rounded-lg border border-[#9ba1a5]/20 transition-colors"
+                  title="Ver formato del aviso por e-mail"
+                >
+                  <Mail className="w-3.5 h-3.5 text-[#60afc1]" />
+                  <span>Aviso E-mail</span>
+                </button>
+              </>
+            )}
 
             {/* Add to Calendar Button */}
             <button

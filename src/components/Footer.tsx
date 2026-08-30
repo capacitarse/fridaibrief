@@ -1,13 +1,21 @@
 import React from 'react';
-import { Calendar, Mail, ExternalLink, ShieldCheck, Heart, Github, Users } from 'lucide-react';
+import { Calendar, Mail, ExternalLink, ShieldCheck, Heart, Github, Users, Lock, Unlock } from 'lucide-react';
 
 interface FooterProps {
   onOpenSubscribe: () => void;
   onOpenCalendar: () => void;
   onOpenSubscribers?: () => void;
+  isAdmin?: boolean;
+  onToggleAdmin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenSubscribe, onOpenCalendar, onOpenSubscribers }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  onOpenSubscribe, 
+  onOpenCalendar, 
+  onOpenSubscribers,
+  isAdmin = false,
+  onToggleAdmin
+}) => {
   return (
     <footer className="bg-[#09193a] text-slate-300 border-t border-slate-800 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -59,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenSubscribe, onOpenCalendar,
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Sincronizar Calendario</span>
               </button>
-              {onOpenSubscribers && (
+              {isAdmin && onOpenSubscribers && (
                 <>
                   <span className="text-slate-600">•</span>
                   <button
@@ -129,11 +137,27 @@ export const Footer: React.FC<FooterProps> = ({ onOpenSubscribe, onOpenCalendar,
           <p>
             © {new Date().getFullYear()} CapacitaRSE. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-4">
+          
+          <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1">
               <span>Diseñado para</span>
               <strong className="text-white">FridAI Brief</strong>
             </span>
+
+            {/* Discreet Admin Toggle */}
+            {onToggleAdmin && (
+              <button
+                onClick={onToggleAdmin}
+                className="p-1 rounded text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+                title={isAdmin ? "Cerrar modo admin" : "Acceso de administración interna"}
+              >
+                {isAdmin ? (
+                  <Unlock className="w-3 h-3 text-amber-400" />
+                ) : (
+                  <Lock className="w-3 h-3 opacity-40 hover:opacity-100" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
