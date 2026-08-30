@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Mail, Clock, CheckCircle2, Lock, Sparkles, ExternalLink, BookOpen } from 'lucide-react';
+import { Calendar, Mail, Clock, CheckCircle2, Lock, Sparkles, ExternalLink, SlidersHorizontal, BookOpen } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSubscribe: () => void;
