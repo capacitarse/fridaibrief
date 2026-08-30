@@ -155,14 +155,10 @@ export default function App() {
       <Navbar
         onOpenSubscribe={() => openSubscribeWithEmail()}
         onOpenCalendar={() => setIsCalendarOpen(true)}
-        onOpenEmailPreview={() => setIsEmailPreviewOpen(true)}
         onResetView={handleBackToGrid}
         activeBriefId={activeBrief ? activeBrief.id : null}
-        unlockAll={unlockAll}
-        onToggleUnlockAll={() => setUnlockAll(!unlockAll)}
         releasedCount={releasedCount}
         totalCount={BRIEFS_DATA.length}
-        isAdmin={isAdmin}
       />
 
       {/* Main Content: Reader View or Home Grid */}
