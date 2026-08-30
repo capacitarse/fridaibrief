@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Copy, Check, Terminal, Info } from 'lucide-react';
+import { X, Mail, Copy, Check, Terminal } from 'lucide-react';
 import { BriefEdition } from '../types';
 
 interface PlainEmailPreviewModalProps {
@@ -10,37 +10,34 @@ interface PlainEmailPreviewModalProps {
 
 export const PlainEmailPreviewModal: React.FC<PlainEmailPreviewModalProps> = ({
   isOpen,
-  onClose,
-  sampleBrief
+  onClose
 }) => {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cursosderse.com/fridai-brief';
-
-  const plainTextEmailContent = `De: CapacitaRSE Intelligence <brief@cursosderse.com>
+  const plainTextEmailContent = `De: CapacitaRSE Lastam <capacitarse@cursosderse.com>
 Para: suscriptor@empresa.com
-Fecha: ${sampleBrief.formattedReleaseDate}, Viernes AM
-Asunto: ${sampleBrief.subjectLine}
+Fecha: Viernes 4 de Septiembre de 2026, Viernes AM
+Asunto: [FridAI Brief #01] Desarmando el reporte de Plaza Logística: Datos duros en Real Estate Sostenible
 
 Hola,
 
-Ya se encuentra disponible en la web la nueva entrega de FridAI Brief by CapacitaRSE (${sampleBrief.editionNumber}):
+Ya se encuentra disponible en la web la nueva entrega de FridAI Brief by CapacitaRSE (#01):
 
-"${sampleBrief.title}"
+"Desarmando el reporte de Plaza Logística: Datos duros en Real Estate Sostenible"
 
-${sampleBrief.subtitle}
+Infraestructura logística, bonos verdes, doble certificación LEED/EDGE y el desafío del Alcance 3.
 
-Eje temático: ${sampleBrief.caseOrTopic}
-Marcos: ${sampleBrief.standards.join(', ')}
-Tiempo estimado: ${sampleBrief.estimatedReadingTime}
+Eje temático: Plaza Logística (Argentina)
+Marcos: GRI Standards, SASB Real Estate, LEED / EDGE, TCFD, Bonos Verdes
+Tiempo estimado: 4 min de lectura
 
 Podes acceder directamente a la entrega completa, matrices y prompts en el siguiente enlace:
-${currentUrl}?edition=${sampleBrief.id}
+https://capacitarse.github.io/fridaibrief/
 
 ---
-CapacitaRSE | Formación y Consultoría en Sostenibilidad & ESG
+CapacitaRSE | 20 años formando líderes responsables y sostenibles en las Américas
 https://cursosderse.com
 Para modificar tu suscripción o cancelar avisos, responde este mensaje con la palabra 'BAJA'.`;
 
