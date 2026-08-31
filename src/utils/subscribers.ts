@@ -1,135 +1,193 @@
-import { SubscriberRecord } from '../types';
+export interface Subscriber {
+  id: string;
+  fullName: string;
+  email: string;
+  country: string;
+  subscribedAt: string;
+  source?: string;
+  syncedToWebhook?: boolean;
+}
 
-const STORAGE_KEY = 'fridai_subscribers_list';
-const WEBHOOK_STORAGE_KEY = 'fridai_google_sheet_webhook';
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH4vtMHCYZf6ZLL1uxMF3D71JlSWtN7wHvx3SM7rA0GFFxniTSoZTfcmeumumZxh-u5g/exec';
+export const LATAM_COUNTRIES = [
+  'Argentina',
+  'Chile',
+  'Colombia',
+  'México',
+  'Perú',
+  'España',
+  'Costa Rica',
+  'Ecuador',
+  'Uruguay',
+  'Panamá',
+  'Bolivia',
+  'Brasil',
+  'Guatemala',
+  'República Dominicana',
+  'Paraguay',
+  'El Salvador',
+  'Honduras',
+  'Nicaragua',
+  'Venezuela',
+  'Puerto Rico',
+  'Estados Unidos',
+  'Otro país'
+];
 
-export function getSubscribers(): SubscriberRecord[] {
-  if (typeof window === 'undefined') return [];
+export const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyH4vtMHCYZf6ZLL1uxMF3D71JlSWtN7wHvx3SM7rA0GFFxniTSoZTfcmeumumZxh-u5g/exec';
+
+export const GOOGLE_APPS_SCRIPT_TEMPLATE = `/**
+ * =========================================================================
+ * GOOGLE APPS SCRIPT: Webhook Receptor para FridAI Brief by CapacitaRSE
+ * =========================================================================
+ */
+
+function doPost(e) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // Si la hoja está vacía, crear encabezados automáticos
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Fecha y Hora", 
+        "Nombre y Apellido", 
+        "Email Corporativo", 
+        "País", 
+        "Fuente",
+        "Estado Recordatorio"
+      ]);
+      sheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#09193a").setFontColor("#ffffff");
+    }
+    
+    var data = {};
+    if (e && e.postData && e.postData.contents) {
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (err) {
+        data = e.parameter || {};
+      }
+    } else if (e && e.parameter) {
+      data = e.parameter;
+    }
+    
+    var timestamp = new Date();
+    var fullName = data.fullName || data.name || "Sin nombre";
+    var email = data.email || "";
+    var country = data.country || "No especificado";
+    var source = data.source || "FridAI Brief Web";
+    var status = "Activo - Envío Viernes AM";
+    
+    if (email) {
+      sheet.appendRow([timestamp, fullName, email, country, source, status]);
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "success", message: "Lead registrado correctamente" }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "active", service: "FridAI Brief Webhook Service CapacitaRSE" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+`;
+
+export function getSubscribers(): Subscriber[] {
+  try {
+    const raw = localStorage.getItem('fridai_subscribers');
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item, index) => {
+        if (typeof item === 'string') {
+          return {
+            id: `legacy-${index}`,
+            fullName: 'Suscriptor',
+            email: item,
+            country: 'No especificado',
+            subscribedAt: new Date().toISOString(),
+            source: 'FridAI Brief'
+          };
+        }
+        return {
+          id: item.id || `sub-${index}-${Date.now()}`,
+          fullName: item.fullName || item.name || 'Sin nombre',
+          email: item.email || '',
+          country: item.country || 'No especificado',
+          subscribedAt: item.subscribedAt || new Date().toISOString(),
+          source: item.source || 'FridAI Brief'
+        };
+      }).filter(s => s.email && s.email.includes('@'));
+    }
+    return [];
   } catch (e) {
-    console.error('Failed to load subscribers from local storage', e);
+    console.error('Error reading subscribers', e);
     return [];
   }
 }
 
-export function saveSubscriber(record: Omit<SubscriberRecord, 'id' | 'timestamp'>): { success: boolean; isDuplicate: boolean; count: number } {
-  if (typeof window === 'undefined') {
-    return { success: false, isDuplicate: false, count: 0 };
-  }
-
-  const existingList = getSubscribers();
-  const normalizedEmail = record.email.trim().toLowerCase();
-
-  const existingIndex = existingList.findIndex(item => item.email.toLowerCase() === normalizedEmail);
+export async function saveSubscriber(data: {
+  fullName: string;
+  email: string;
+  country: string;
+  source?: string;
+}): Promise<{ success: boolean; syncedToWebhook: boolean }> {
+  const cleanEmail = data.email.trim().toLowerCase();
+  const cleanName = data.fullName.trim();
+  const cleanCountry = data.country.trim();
+  const source = data.source || 'FridAI Brief Landing';
   
-  const newRecord: SubscriberRecord = {
-    id: existingIndex >= 0 ? existingList[existingIndex].id : `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-    email: normalizedEmail,
-    name: record.name ? record.name.trim() : undefined,
-    organization: record.organization ? record.organization.trim() : undefined,
-    preferredChannel: record.preferredChannel || 'email',
-    editionTarget: record.editionTarget || 'ALL_LAUNCH',
-    timestamp: new Date().toISOString()
+  const currentList = getSubscribers();
+  
+  const existingIdx = currentList.findIndex(s => s.email.toLowerCase() === cleanEmail);
+  const newEntry: Subscriber = {
+    id: Date.now().toString(),
+    fullName: cleanName || (existingIdx >= 0 ? currentList[existingIdx].fullName : 'Suscriptor'),
+    email: cleanEmail,
+    country: cleanCountry || (existingIdx >= 0 ? currentList[existingIdx].country : 'No especificado'),
+    subscribedAt: new Date().toISOString(),
+    source,
+    syncedToWebhook: false
   };
 
-  let updatedList: SubscriberRecord[];
-  let isDuplicate = false;
-
-  if (existingIndex >= 0) {
-    updatedList = [...existingList];
-    updatedList[existingIndex] = newRecord;
-    isDuplicate = true;
+  if (existingIdx >= 0) {
+    currentList[existingIdx] = { ...currentList[existingIdx], ...newEntry };
   } else {
-    updatedList = [newRecord, ...existingList];
+    currentList.unshift(newEntry);
   }
 
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-  } catch (e) {
-    console.error('Failed to save subscriber locally', e);
-  }
+  localStorage.setItem('fridai_subscribers', JSON.stringify(currentList));
 
-  // Enviar a Google Sheets
-  const webhookUrl = getAppsScriptWebhookUrl();
+  // Envío directo a tu Google Apps Script de Google Workspace
+  let syncedToWebhook = false;
+  const webhookUrl = localStorage.getItem('fridai_webhook_url') || DEFAULT_WEBHOOK_URL;
   if (webhookUrl && webhookUrl.startsWith('http')) {
     try {
-      const payload = {
-        timestamp: newRecord.timestamp,
-        email: newRecord.email,
-        name: newRecord.name || '',
-        organization: newRecord.organization || '',
-        preferredChannel: newRecord.preferredChannel || 'email'
-      };
-
-      fetch(webhookUrl, {
+      await fetch(webhookUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
+          'Content-Type': 'text/plain;charset=utf-8',
         },
-        body: JSON.stringify(payload)
-      }).catch(err => {
-        console.warn('Webhook error:', err);
+        body: JSON.stringify({
+          fullName: newEntry.fullName,
+          email: newEntry.email,
+          country: newEntry.country,
+          source: newEntry.source,
+          timestamp: newEntry.subscribedAt
+        })
       });
+      syncedToWebhook = true;
     } catch (err) {
-      console.warn('Google Sheets Webhook note:', err);
+      console.warn('Webhook dispatch error:', err);
     }
   }
 
-  return {
-    success: true,
-    isDuplicate,
-    count: updatedList.length
-  };
-}
-
-export function getAppsScriptWebhookUrl(): string {
-  if (typeof window === 'undefined') return DEFAULT_APPS_SCRIPT_URL;
-  return localStorage.getItem(WEBHOOK_STORAGE_KEY) || DEFAULT_APPS_SCRIPT_URL;
-}
-
-export function setAppsScriptWebhookUrl(url: string): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(WEBHOOK_STORAGE_KEY, url.trim());
-}
-
-export function exportSubscribersToCSV(): void {
-  const subscribers = getSubscribers();
-  if (subscribers.length === 0) {
-    alert('Aún no hay suscriptores guardados localmente.');
-    return;
-  }
-
-  const headers = ['ID', 'Email', 'Nombre', 'Organizacion', 'Canal', 'Objetivo', 'Fecha'];
-  const rows = subscribers.map(s => [
-    s.id,
-    `"${s.email}"`,
-    `"${s.name || ''}"`,
-    `"${s.organization || ''}"`,
-    `"${s.preferredChannel}"`,
-    `"${s.editionTarget || ''}"`,
-    `"${s.timestamp}"`
-  ]);
-
-  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `fridai_suscriptores_${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-export function getSampleAppsScriptCode(): string {
-  return `function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  sheet.appendRow([data.timestamp, data.email, data.name, data.organization, data.preferredChannel]);
-  return ContentService.createTextOutput(JSON.stringify({ result: "success" })).setMimeType(ContentService.MimeType.JSON);
-}`;
+  return { success: true, syncedToWebhook };
 }
