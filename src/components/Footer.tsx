@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Mail, ExternalLink, ShieldCheck, Heart, Github, Users, Lock, Unlock } from 'lucide-react';
+import { Calendar, Mail, ExternalLink, ShieldCheck, Heart, Github, Users } from 'lucide-react';
 
 interface FooterProps {
   onOpenSubscribe: () => void;
@@ -132,7 +132,7 @@ export const Footer: React.FC<FooterProps> = ({
 
         </div>
 
-        {/* Bottom bar */}
+        {/* Bottom bar (Sin candado ni toggles visibles) */}
         <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>
             © {new Date().getFullYear()} CapacitaRSE. Todos los derechos reservados.
@@ -143,21 +143,6 @@ export const Footer: React.FC<FooterProps> = ({
               <span>Diseñado para</span>
               <strong className="text-white">FridAI Brief</strong>
             </span>
-
-            {/* Discreet Admin Toggle */}
-            {onToggleAdmin && (
-              <button
-                onClick={onToggleAdmin}
-                className="p-1 rounded text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
-                title={isAdmin ? "Cerrar modo admin" : "Acceso de administración interna"}
-              >
-                {isAdmin ? (
-                  <Unlock className="w-3 h-3 text-amber-400" />
-                ) : (
-                  <Lock className="w-3 h-3 opacity-40 hover:opacity-100" />
-                )}
-              </button>
-            )}
           </div>
         </div>
 
